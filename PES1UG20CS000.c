@@ -1,9 +1,10 @@
 #include "header.h"
 #include<limits.h>
-static void reverse_graph (int n,const connection_t connection[n][n],connection_t rev[n][n]);
+static void reverse_graph (int n,const connection_t connection[n][n],connection_t rev[n][n]);//returns a transposed digraph i.e reverses the edges in the digraph
 static void dfs (int i,int n,const connection_t connection[n][n],int airports[n],int stack[n],int* top);
 int count_ones(int n,int arr[n]);
-//returns a transposed digraph i.e reverses the edges in the digraph
+int path_find(int n,int  dest ,const connection_t connection[n][n] ,int k,int sour,int *visited,int curr_path_length);
+
 
 // ANY STATIC FUNCTIONS ARE UP HERE
 static void  reverse_graph(int n, const connection_t connection[n][n],connection_t rev[n][n])
@@ -48,7 +49,37 @@ int count_ones(int n,int arr[n])
     }
     return count;
 }
+int path_find(int n,int  dest ,const connection_t connection[n][n] ,int k,int src,int *visited,int curr_path_length)
+{
+    if(src==dest)
+    {
+        return 1;
+    }
 
+    if(k<curr_path_length)
+    {
+        return 0;//test
+    }
+    visited[src]=1;
+
+        for(int j=0;j<n;j++)
+        {
+            if(visited[j]!=1 && connection[src][j].distance!=INT_MAX && connection[src][j].time!=INT_MAX )
+            {
+               int flag= path_find(n,dest,connection,k,j,visited,curr_path_length+1);
+
+               if (flag==1)
+                {
+                        return 1;
+                }
+
+
+            }
+
+        }
+        return 0;//from this node there is no unvisted node
+
+}
 
 // YOUR SOLUTIONS BELOW
 
@@ -90,6 +121,19 @@ int q1(int n, const connection_t connections[n][n])
 
 int q2(const airport_t *src, const airport_t *dest, int n, int k,const connection_t connections[n][n])
 {
+    //so basically we need to find all paths
+    int visited[n];
+    for (int i=0;i<n;i++)
+    {
+        visited[i]=0;
+    }
+    int flag;
+    flag=path_find(n,dest->num_id,connections,k,src->num_id,visited,0);
+    if (flag==1)
+    {
+        return 1;
+
+    }
 
 
     return 0;
@@ -97,6 +141,9 @@ int q2(const airport_t *src, const airport_t *dest, int n, int k,const connectio
 
 int q3(const airport_t *src, int n, const connection_t connections[n][n])
 {
+
+
+
     return 0;
 }
 
