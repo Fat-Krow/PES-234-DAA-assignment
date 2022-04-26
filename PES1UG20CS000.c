@@ -11,7 +11,27 @@ static void definently_not_strncpy(char *dest, const char *src, int k);
 static int definently_not_strlen(const char *string);
 static int binarySearchCount(int n, const int arr[n], int key);
 static void shifttable(int shift_table[256], const char pattern[]);
-static int horspool(const char src[],const char p[]);
+static int horspool(const char src[], const char p[]);
+typedef struct
+{
+    int cost;
+    int sequence_of_visits[8];
+} trip;
+static int traveling_sales_man_with_backtracking(int n, const connection_t connections[n][n], int visited[], int start, int currPos, int visit_count, int cost, trip all_trips[n], int *size);
+
+static int min(int n, trip all_trips[n]);
+typedef struct edge_maker
+{
+  int u;
+  int v;
+  connection_t w;
+} edge;
+
+typedef struct edge_list_maker
+{
+  edge data[100];
+  int n;
+} edge_list;
 // ANY STATIC FUNCTIONS ARE UP HERE
 static void reverse_graph(int n, const connection_t connection[n][n], connection_t rev[n][n])
 { // connection_t copy;
@@ -57,12 +77,12 @@ static int path_find(int n, int dest, const connection_t connection[n][n], int k
 {
     if (src == dest)
     {
-        return 1;
+        return 1; // if src== dest we have found the way
     }
 
     if (k < curr_path_length)
     {
-        return 0; // test
+        return 0; // test path faild
     }
     visited[src] = 1;
 
@@ -71,10 +91,10 @@ static int path_find(int n, int dest, const connection_t connection[n][n], int k
         if (visited[j] != 1 && connection[src][j].distance != INT_MAX && connection[src][j].time != INT_MAX)
         {
             int flag = path_find(n, dest, connection, k, j, visited, curr_path_length + 1);
-
+            // recursively call path find to see if a path exists from the adjacent nodes
             if (flag == 1)
             {
-                return 1;
+                return 1; // we found the path
             }
         }
     }
@@ -91,32 +111,32 @@ static void swap(airport_t *a, airport_t *b)
 static int partition(int n, airport_t array[n], int (*predicate_func)(const airport_t *, const airport_t *), int low, int high)
 {
 
-    // select the rightmost element as pivot
+    // first I select the rightmost element as pivot
     airport_t pivot = array[high];
 
-    // pointer for greater element
+    // this is a  pointer for greater element
     int i = (low - 1);
 
-    // traverse each element of the array
-    // compare them with the pivot
+    // then I  traverse each element of the array
+    //&& compare them with the pivot
     for (int j = low; j < high; j++)
     {
         if (predicate_func(&array[j], &pivot))
         {
 
-            // if element smaller than pivot is found
-            // swap it with the greater element pointed by i
+            // if a element < pivot is found
+            // swap it with the >er element pointed by i
             i++;
 
-            // swap element at i with element at j
+            // swaping arr[i]  with arr[j]
             swap(&array[i], &array[j]);
         }
     }
 
-    // swap the pivot element with the greater element at i
+    // and then finally I  swap the pivot element with the greater element located at  i
     swap(&array[i + 1], &array[high]);
 
-    // return the partition point
+    //&& return the partition point
     return (i + 1);
 }
 static void quickSort(int n, airport_t array[n], int (*predicate_func)(const airport_t *, const airport_t *), int low, int high)
@@ -125,31 +145,31 @@ static void quickSort(int n, airport_t array[n], int (*predicate_func)(const air
     if ((low < high) && predicate_func(&array[low], &array[high])) // this is for ascending
     {
 
-        // find the pivot element such that n-1
-        // elements smaller than pivot are on left of pivot
-        // elements greater than pivot are on right of pivot
+        // first I  find the pivot element such that
+        //  elements < pivot go  left of pivot
+        //&& elements > than pivot are on right
         int pi = partition(n, array, predicate_func, low, high);
 
-        // recursive call on the left of pivot
+        // left side call
 
         quickSort(n, array, predicate_func, low, pi - 1);
 
-        // recursive call on the right of pivot
+        // right side call
         quickSort(n, array, predicate_func, pi + 1, high);
     }
     else if ((low < high) && predicate_func(&array[high], &array[low])) // this for descending patterns
-    {
+    {                                                                   // this low<high is required to avoid a outofbound error
 
-        // find the pivot element such that n-1
-        // elements smaller than pivot are on left of pivot
-        // elements greater than pivot are on right of pivot
+        // first I  find the pivot element such that
+        //  elements < pivot go  left of pivot
+        //&& elements > than pivot are on right
         int pi = partition(n, array, predicate_func, low, high);
 
-        // recursive call on the left of pivot
+        // left side call
 
         quickSort(n, array, predicate_func, low, pi - 1);
 
-        // recursive call on the right of pivot
+        // right side call
         quickSort(n, array, predicate_func, pi + 1, high);
     }
 }
@@ -158,30 +178,29 @@ static void definently_not_strncpy(char *dest, const char *src, int k)
     int i;
     for (i = 0; ((i < k) && (src[i] != '\0')); i++)
     {
-        dest[i] = src[i];
+        dest[i] = src[i]; // definently_not_strncpy indeed
     }
     dest[i] = '\0';
 }
 static int definently_not_strlen(const char *string)
 {
     unsigned int count = 0;
-    while(*string!='\0')
+    while (*string != '\0')
     {
         count++;
-        string++;
+        string++; ////definently_not_strlen indeed
     }
     return count;
 }
-// A binary search function to return
-// the number of elements less than
-// or equal to the given key
+// A modifed  binary search approach  to return
+// the number of elements <=given key
 static int binarySearchCount(int n, const int arr[n], int key)
 {
 
     int left = 0;
     int right = n - 1;
 
-    int count = 0;
+    int count = 0; // this var will store the number of elements <= the key
     int mid;
     while (left <= right)
     {
@@ -191,14 +210,13 @@ static int binarySearchCount(int n, const int arr[n], int key)
         // less than or equal to key
         if (arr[mid] <= key)
         {
-            // At least (mid + 1) elements are there
-            // whose values are less than
-            // or equal to key
+            /*basicaly there should be At least (mid + 1) elements are there
+             that  are <=key*/
             count = mid + 1;
             left = mid + 1;
         }
 
-        // If key is smaller, ignore right half
+        // If key is small, ignore right side
         else
         {
             right = mid - 1;
@@ -207,49 +225,168 @@ static int binarySearchCount(int n, const int arr[n], int key)
 
     return count;
 }
-static void shifttable(int shift_table[256],const char pattern[])
+static void shifttable(int shift_table[256], const char pattern[])
 { /*this function will create the shift table */
     int i, j, m;
     m = definently_not_strlen(pattern); // m=length of pattern
     for (i = 0; i < 256; i++)
     {
-        shift_table[i] = m;
+        shift_table[i] = m; // by default filling up the table with the length of pattern string
     }
     for (j = 0; j < m - 1; j++)
     {
         shift_table[(int)pattern[j]] = m - 1 - j;
     }
 }
-static int horspool(const char text[],const char pattern[])
-{   int  shift_table[256];
-    shifttable(shift_table,pattern);
-    int i,k, m, n;
-    n = definently_not_strlen(text);//length of the string IN WHICH we need to search
-    m = definently_not_strlen(pattern);//length of the pattern we need to search for
-    i = m - 1;//because we start from last char
-    //int where;
-    //shifttable(shift_table,pattern);//this function prepares the shift table
+static int horspool(const char text[], const char pattern[])
+{
+    int shift_table[256];
+    shifttable(shift_table, pattern);
+    int i, k, m, n;
+    n = definently_not_strlen(text);    // length of the string IN WHICH we need to search
+    m = definently_not_strlen(pattern); // length of the pattern we need to search for
+    i = m - 1;                          // because we start from last char
+    // int where;
+    // shifttable(shift_table,pattern);//this function prepares the shift table
     while (i < n)
     {
-        k = 0;//first char of pattern string
-        
-        while ((k < m) && (pattern[m - 1 - k] == text[i-k]))//i=2-1
+        k = 0; // first char of pattern string
+
+        while ((k < m) && (pattern[m - 1 - k] == text[i - k])) // i=2-1
         {
-            k=k+1;//the real horspool logic starts here
+            k = k + 1;
+            /*the real horspool logic starts here by comparing the END to BEGINN of PATTERN string
+            with corresponding text string char
+            */
         }
         if (k == m)
         {
-             
-            return (i - m + 1);//returns where it is found
+
+            return (i - m + 1); // returns where it is found
         }
         else
-        {
-                i = i + shift_table[(int)text[i]];
+        { /*This one line is makes horspool diffrent from any brute force
+          comparisson tequique*/
+            i = i + shift_table[(int)text[i]];
         }
     }
     return -1;
 }
+static int traveling_sales_man_with_backtracking(int n, const connection_t connections[n][n], int visited[], int start, int currPos, int visit_count, int cost, trip all_trips[n], int *size)
+{
 
+    if (visit_count == n && connections[currPos][start].distance != INT_MAX)
+    {
+        all_trips[*size].cost = (cost + connections[currPos][start].distance); /*stores
+           the total cost*/
+        all_trips[*size].sequence_of_visits[visit_count] = currPos;
+        *size = *size + 1;
+        return 1; // Success
+    }
+    // BACKTRACKING STEP
+    // Loop to traverse the adjacency list
+    // of currPos node and increasing the visit_count
+    // by 1 and cost by graph[currPos][i] value
+    for (int i = 0; i < n; i++)
+    {
+        /* code */
+        if (visited[i] == 0 && connections[currPos][i].distance != INT_MAX) // work
+        {
+            // Mark as visited
+            visited[i] = 1;
+            int ret_val;
+            // tsp(graph, v, i, n, count + 1,cost + graph[currPos][i]); work on this
+            ret_val = traveling_sales_man_with_backtracking(n, connections, visited, start, currPos, visit_count + 1, cost, all_trips, size);
+            if (ret_val == 1)
+            {
+                // The recursive call returned after successfully finding a compliant trip.
+                all_trips[*size].sequence_of_visits[visit_count] = currPos;
+                return 1;
+            }
+            // Mark ith node as unvisited
+            visited[i] = 0;
+        }
+    }
+    return 0; // Failure
+}
+static int min(int n, trip all_trips[n])
+{
+    int min = 0;
+    for (int i = 0; i < n; i++)
+    {
+        if (all_trips[i].cost < all_trips[min].cost)
+        {
+            min = i;
+        }
+    }
+    return min;
+}
+// Sorting algo
+void bubble_sort(edge_list* The_list_of_all_edges)
+{
+  int i, j;
+  edge temp;
+
+  for (i = 1; i < The_list_of_all_edges->n; i++)
+  {  for (j = 0; j < The_list_of_all_edges->n - 1; j++)
+    {
+      if (The_list_of_all_edges->data[j].w.time > The_list_of_all_edges->data[j + 1].w.time)
+      {
+        temp = The_list_of_all_edges->data[j];
+        The_list_of_all_edges->data[j] = The_list_of_all_edges->data[j + 1];
+        The_list_of_all_edges->data[j + 1] = temp;
+      }
+    }
+  }
+}
+int find(int parent_track[], int vertexno)
+{
+  return (parent_track[vertexno]);//I have used this function finds the absoulte root
+}
+void applyUnion(int n,int parent_track[], int c1, int c2)
+{
+  int i;
+
+  for (i = 0; i < n; i++)
+  {
+    if (parent_track[i] == c2)//I have used this function to apply the union operaion
+    {
+      parent_track[i] = c1;
+      //break;
+    }
+  }
+}
+
+
+static void Kruskals_Algorithim(int n, pair_t edges[n - 1], const connection_t connections[n][n],edge_list* The_list_of_all_edges,edge_list* The_span_list)
+{
+  int parent_track[n];
+  int i;
+  int absolute_root1;
+  int absolute_root2;
+  bubble_sort(The_list_of_all_edges);//This function sorts the lis of edges based on time using bubble sort
+
+  for (i = 0; i < n; i++)
+  {
+        parent_track[i] = i;//This array keeps track of which set a edge in before we add a new one
+  }
+
+  The_span_list->n = 0;//this is the span list
+
+  for (i = 0; i < The_list_of_all_edges->n; i++)//selects each edge from the sorted array
+  {
+    absolute_root1 = find(parent_track, The_list_of_all_edges->data[i].u);//finds the absoulute node of u
+    absolute_root2 = find(parent_track, The_list_of_all_edges->data[i].v);//
+
+    if (absolute_root1 != absolute_root2) //check if the node is not in the set(checks if a loop is created beofre addig)
+    {
+      The_span_list->data[The_span_list->n] = The_list_of_all_edges->data[i];//adding the edge to The_span_list
+      The_span_list->n = The_span_list->n + 1;//span list increases
+      applyUnion(n,parent_track, absolute_root1, absolute_root2);//actually attaching the two sets
+    }
+  }
+  int xyz=The_span_list->n;
+}
 // YOUR SOLUTIONS BELOW
 
 int q1(int n, const connection_t connections[n][n])
@@ -294,10 +431,11 @@ int q2(const airport_t *src, const airport_t *dest, int n, int k, const connecti
     int visited[n];
     for (int i = 0; i < n; i++)
     {
-        visited[i] = 0;
+        visited[i] = 0; // initializing the visited array
+        // which be useful the upcomming recursive path_find function
     }
     int flag;
-    flag = path_find(n, dest->num_id, connections, k, src->num_id, visited, 0);
+    flag = path_find(n, dest->num_id, connections, k, src->num_id, visited, 0); // recursive call begins
     if (flag == 1)
     {
         return 1;
@@ -309,6 +447,7 @@ int q2(const airport_t *src, const airport_t *dest, int n, int k, const connecti
 int q3(const airport_t *src, int n, const connection_t connections[n][n])
 {
     // Finding a loop in a graph
+    // for that we can re-use path_find() function!
     int adjacent[n];
     int end = 0;
     for (int j = 0; j < n; j++)
@@ -326,11 +465,11 @@ int q3(const airport_t *src, int n, const connection_t connections[n][n])
     {
         for (int i = 0; i < n; i++)
         {
-            visited[i] = 0;
+            visited[i] = 0; // initializing the visited array
         }
         if (path_find(n, src->num_id, connections, n, adjacent[0], visited, 0))
         {
-            return 1;
+            return 1; // path found
         }
     }
     // if we can't find a path from anyone of  the adjacent-to-src nodes
@@ -394,44 +533,107 @@ int q6(int n, int amount, const int entry_fee[n])
     // Driver code
 
     int ans = binarySearchCount(n, entry_fee, amount);
-
+    // huh it actually correctly on first go nice!
     return ans;
 }
 
 void q7(int n, const char *pat, int contains[n], const airport_t airports[n])
 {
-    int where;
+    int where; // this variable is the index of where the pattern is found
     for (int i = 0; i < n; i++)
     {
 
-        where=horspool(airports[i].airport_name,pat);//while this one does the actual checking
-        if(where>=0)
+        where = horspool(airports[i].airport_name, pat); // while this one does the actual checking
+        if (where >= 0)
         {
-            contains[i]=1;
+            contains[i] = 1;
         }
         else
         {
-            contains[i]=0;
+            contains[i] = 0;
         }
-
     }
-
 }
 
 int q8(int n, int trip_order[n - 1], const connection_t connections[n][n])
 {
-    return 0;
+    int visited[n];
+
+    trip all_trips[5040];//fact(7)
+    int size = 0;
+
+    // trip_order needs to be passed
+for (int i = 0; i < n; i++)//start point  loop
+{
+    for (int k = 0; k < n; k++)//excemption loop
+    {
+        for (int j = 0; j < n; j++)
+        {
+            visited[j] = 0;//initialzing visted array
+        }
+        if (k!=i)
+        {
+            visited[k]=-1;
+            traveling_sales_man_with_backtracking(n, connections, visited, i, i, 0, 0, all_trips, &size);
+        }
+
+    }
+}
+
+    if (size>0)
+    {
+        int min_index = min(n, all_trips);
+        for (int i = 0; i < n-1; i++)
+        {
+        trip_order[i]=all_trips[min_index].sequence_of_visits[i];
+        }
+        int xyz=all_trips[min_index].cost;
+        return all_trips[min_index].cost;
+    }
+    else
+    {   //nont changing trip_order
+        return -1;
+    }
+
+
+
+    //return 0;
 }
 
 int q9(int n, pair_t edges[n - 1], const connection_t connections[n][n])
-{
-    return 0;
+{   edge_list The_list_of_all_edges;
+    edge_list The_span_list;
+    The_list_of_all_edges.n=0;
+    The_span_list.n=0;
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < i; j++)
+        {
+            if (connections[i][j].time != 0 && connections[i][j].time != INT_MAX)
+            {
+                The_list_of_all_edges.data[The_list_of_all_edges.n].u = i;
+                The_list_of_all_edges.data[The_list_of_all_edges.n].v = j;
+                The_list_of_all_edges.data[The_list_of_all_edges.n].w = connections[i][j]; // collects all the info of all the edges
+                The_list_of_all_edges.n++;
+            }
+        }
+    }
+    Kruskals_Algorithim(n,edges,connections,&The_list_of_all_edges,&The_span_list);
+    int count=0;
+    for (int i = 0; i < n-1; i++)
+    {   count=count+The_span_list.data[i].w.time;
+        edges[i].first=The_span_list.data[i].u;
+        edges[i].second=The_span_list.data[i].v;
+    }
+
+    return count;
 }
 
 void q10(int n, int k, const airport_t *src,
          const connection_t connections[n][n], const int destinations[k],
          int costs[k])
 {
+
 }
 
 // END
