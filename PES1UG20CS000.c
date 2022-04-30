@@ -17,21 +17,39 @@ typedef struct
     int cost;
     int sequence_of_visits[8];
 } trip;
-static int traveling_sales_man_with_backtracking(int n, const connection_t connections[n][n], int visited[], int start, int currPos, int visit_count, int cost, trip all_trips[n], int *size);
-
+static int get_all_trips(int n,
+                         const connection_t connections[n][n],
+                         int visited[],
+                         int start,
+                         int currPos,
+                         int exempted,
+                         int visit_count,
+                         int cost,
+                         trip all_trips[n],
+                         int *size);
+static void extract_trip_seq(int n,
+                             int visited[n],   // input array
+                             int trip_seq[n]); // output array
 static int min(int n, trip all_trips[n]);
+
 typedef struct edge_maker
 {
-  int u;
-  int v;
-  connection_t w;
+    int u;
+    int v;
+    connection_t w;
 } edge;
 
 typedef struct edge_list_maker
 {
-  edge data[100];
-  int n;
+    edge data[100];
+    int n;
 } edge_list;
+static void bubble_sort(edge_list *The_list_of_all_edges);
+static int find(int parent_track[], int vertexno);
+static void applyUnion(int n, int parent_track[], int c1, int c2);
+static void Kruskals_Algorithim(int n, pair_t edges[n - 1], const connection_t connections[n][n], edge_list *The_list_of_all_edges, edge_list *The_span_list);
+static int min(int n, trip all_trips[n]);
+static int min_two(int x, int y);
 // ANY STATIC FUNCTIONS ARE UP HERE
 static void reverse_graph(int n, const connection_t connection[n][n], connection_t rev[n][n])
 { // connection_t copy;
@@ -182,6 +200,37 @@ static void definently_not_strncpy(char *dest, const char *src, int k)
     }
     dest[i] = '\0';
 }
+
+// Expects the input array to contain consecutive integers in the range
+// [1, n], but scattered in some arbitrary order.
+// The successive elements of the output array when applied as indexes
+// upon the input array, will give a sorted version of the input array.
+static void extract_trip_seq(int n,
+                             int visited[n],  // input array
+                             int trip_seq[n]) // output array
+{
+
+    for (int i = 0; i <= n; i++)
+    {
+        // Look for the value i, in the input array.
+        int j;
+        int must_continue;
+        for (j = 0, must_continue = 1; (j < n) && must_continue; )
+        {
+            if (visited[j] == i)
+            {
+                must_continue = 0;
+            }
+            else
+            {
+                j += 1;
+            }
+        }
+
+        trip_seq[i] = j;
+    }
+} // end of extract_trip_seq()
+
 static int definently_not_strlen(const char *string)
 {
     unsigned int count = 0;
@@ -272,17 +321,123 @@ static int horspool(const char text[], const char pattern[])
     }
     return -1;
 }
-static int traveling_sales_man_with_backtracking(int n, const connection_t connections[n][n], int visited[], int start, int currPos, int visit_count, int cost, trip all_trips[n], int *size)
+
+static void bubble_sort(edge_list *The_list_of_all_edges)
+{
+    int i, j;
+    edge temp;
+
+    for (i = 1; i < The_list_of_all_edges->n; i++)
+    {
+        for (j = 0; j < The_list_of_all_edges->n - 1; j++)
+        {
+            if (The_list_of_all_edges->data[j].w.time > The_list_of_all_edges->data[j + 1].w.time)
+            {
+                temp = The_list_of_all_edges->data[j];
+                The_list_of_all_edges->data[j] = The_list_of_all_edges->data[j + 1];
+                The_list_of_all_edges->data[j + 1] = temp;
+            }
+        }
+    }
+}
+static int find(int parent_track[], int vertexno)
+{
+    return (parent_track[vertexno]); // I have used this function finds the absoulte root
+}
+static void applyUnion(int n, int parent_track[], int c1, int c2)
+{
+    int i;
+
+    for (i = 0; i < n; i++)
+    {
+        if (parent_track[i] == c2) // I have used this function to apply the union operaion
+        {
+            parent_track[i] = c1;
+            // break;
+        }
+    }
+}
+
+static void Kruskals_Algorithim(int n, pair_t edges[n - 1], const connection_t connections[n][n], edge_list *The_list_of_all_edges, edge_list *The_span_list)
+{
+    int parent_track[n];
+    int i;
+    int absolute_root1;
+    int absolute_root2;
+    bubble_sort(The_list_of_all_edges); // This function sorts the lis of edges based on time using bubble sort
+
+    for (i = 0; i < n; i++)
+    {
+        parent_track[i] = i; // This array keeps track of which set a edge in before we add a new one
+    }
+
+    The_span_list->n = 0; // this is the span list
+
+    for (i = 0; i < The_list_of_all_edges->n; i++) // selects each edge from the sorted array
+    {
+        absolute_root1 = find(parent_track, The_list_of_all_edges->data[i].u); // finds the absoulute node of u
+        absolute_root2 = find(parent_track, The_list_of_all_edges->data[i].v); //
+
+        if (absolute_root1 != absolute_root2) // check if the node is not in the set(checks if a loop is created beofre addig)
+        {
+            The_span_list->data[The_span_list->n] = The_list_of_all_edges->data[i]; // adding the edge to The_span_list
+            The_span_list->n = The_span_list->n + 1;                                // span list increases
+            applyUnion(n, parent_track, absolute_root1, absolute_root2);            // actually attaching the two sets
+        }
+    }
+}
+static int min_two(int x, int y)
+{
+    if (x < y)
+    {
+        return x;
+    }
+    else
+    {
+        return y;
+    }
+}
+
+static int get_all_trips(int n,
+                         const connection_t connections[n][n],
+                         int visited[],
+                         int start,
+                         int currPos,
+                         int exempted,
+                         int visit_count,
+                         int cost,
+                         trip all_trips[n],
+                         int *size)
 {
 
-    if (visit_count == n && connections[currPos][start].distance != INT_MAX)
+    visited[currPos] = visit_count;
+    visit_count++;
+
+    if (visit_count == (n - 1))
     {
-        all_trips[*size].cost = (cost + connections[currPos][start].distance); /*stores
-           the total cost*/
-        all_trips[*size].sequence_of_visits[visit_count] = currPos;
-        *size = *size + 1;
-        return 1; // Success
-    }
+        // (n-2) is the maximum we are allowed to visit, excluding
+        // start airport and the exempted airport.
+
+        if (connections[currPos][start].distance == INT_MAX)
+        {
+            // After having visited (n-2) airports, the airport
+            // where we are at now (currPos) does not have a connection to
+            // the start airport.
+
+            return 0; // Failure
+        }
+        else
+        {
+            /*stores the total cost*/
+            all_trips[*size].cost = (cost + connections[currPos][start].distance);
+
+            extract_trip_seq(n - 1, visited, all_trips[*size].sequence_of_visits);
+
+            *size = *size + 1;
+            return 1; // Success
+        }
+    } // if we have visited (n-2) airports so far.
+
     // BACKTRACKING STEP
     // Loop to traverse the adjacency list
     // of currPos node and increasing the visit_count
@@ -290,25 +445,32 @@ static int traveling_sales_man_with_backtracking(int n, const connection_t conne
     for (int i = 0; i < n; i++)
     {
         /* code */
-        if (visited[i] == 0 && connections[currPos][i].distance != INT_MAX) // work
+        if ((i != exempted) && (i != start))
         {
-            // Mark as visited
-            visited[i] = 1;
-            int ret_val;
-            // tsp(graph, v, i, n, count + 1,cost + graph[currPos][i]); work on this
-            ret_val = traveling_sales_man_with_backtracking(n, connections, visited, start, currPos, visit_count + 1, cost, all_trips, size);
-            if (ret_val == 1)
+            if (visited[i] == 0 && connections[currPos][i].distance != INT_MAX) // work
             {
-                // The recursive call returned after successfully finding a compliant trip.
-                all_trips[*size].sequence_of_visits[visit_count] = currPos;
-                return 1;
+                // Mark as visited
+                visited[i] = visit_count;
+                int ret_val;
+
+                ret_val = get_all_trips(n,
+                                        connections,
+                                        visited,
+                                        start,
+                                        i,
+                                        exempted,
+                                        visit_count,
+                                        cost + connections[currPos][i].distance,
+                                        all_trips, size);
+                // Mark ith node as unvisited
+                visited[i] = 0;
             }
-            // Mark ith node as unvisited
-            visited[i] = 0;
         }
-    }
+    } // loop through adjacency list.
+
     return 0; // Failure
 }
+
 static int min(int n, trip all_trips[n])
 {
     int min = 0;
@@ -321,72 +483,31 @@ static int min(int n, trip all_trips[n])
     }
     return min;
 }
-// Sorting algo
-void bubble_sort(edge_list* The_list_of_all_edges)
+static int find_min_time(int n,int v,int dst,int curCost,int minCost,const connection_t connections[n][n],int visited[n])
 {
-  int i, j;
-  edge temp;
-
-  for (i = 1; i < The_list_of_all_edges->n; i++)
-  {  for (j = 0; j < The_list_of_all_edges->n - 1; j++)
+    // int res = INT_MAX;
+    visited[v] = 1;
+    if (v == dst)
     {
-      if (The_list_of_all_edges->data[j].w.time > The_list_of_all_edges->data[j + 1].w.time)
-      {
-        temp = The_list_of_all_edges->data[j];
-        The_list_of_all_edges->data[j] = The_list_of_all_edges->data[j + 1];
-        The_list_of_all_edges->data[j + 1] = temp;
-      }
+        if (curCost < minCost)
+        {
+            minCost = curCost;
+        }
     }
-  }
-}
-int find(int parent_track[], int vertexno)
-{
-  return (parent_track[vertexno]);//I have used this function finds the absoulte root
-}
-void applyUnion(int n,int parent_track[], int c1, int c2)
-{
-  int i;
-
-  for (i = 0; i < n; i++)
-  {
-    if (parent_track[i] == c2)//I have used this function to apply the union operaion
+    else
     {
-      parent_track[i] = c1;
-      //break;
+        for (int i = 0; i < n; ++i)
+        {
+            if (!visited[i] && connections[v][i].time != INT_MAX && connections[v][i].time != 0)
+            {
+                minCost = find_min_time(n, i, dst, curCost + connections[v][i].time, minCost, connections, visited);
+            }
+        }
     }
-  }
+    visited[v] = 0;
+    return minCost;
 }
 
-
-static void Kruskals_Algorithim(int n, pair_t edges[n - 1], const connection_t connections[n][n],edge_list* The_list_of_all_edges,edge_list* The_span_list)
-{
-  int parent_track[n];
-  int i;
-  int absolute_root1;
-  int absolute_root2;
-  bubble_sort(The_list_of_all_edges);//This function sorts the lis of edges based on time using bubble sort
-
-  for (i = 0; i < n; i++)
-  {
-        parent_track[i] = i;//This array keeps track of which set a edge in before we add a new one
-  }
-
-  The_span_list->n = 0;//this is the span list
-
-  for (i = 0; i < The_list_of_all_edges->n; i++)//selects each edge from the sorted array
-  {
-    absolute_root1 = find(parent_track, The_list_of_all_edges->data[i].u);//finds the absoulute node of u
-    absolute_root2 = find(parent_track, The_list_of_all_edges->data[i].v);//
-
-    if (absolute_root1 != absolute_root2) //check if the node is not in the set(checks if a loop is created beofre addig)
-    {
-      The_span_list->data[The_span_list->n] = The_list_of_all_edges->data[i];//adding the edge to The_span_list
-      The_span_list->n = The_span_list->n + 1;//span list increases
-      applyUnion(n,parent_track, absolute_root1, absolute_root2);//actually attaching the two sets
-    }
-  }
-  int xyz=The_span_list->n;
-}
 // YOUR SOLUTIONS BELOW
 
 int q1(int n, const connection_t connections[n][n])
@@ -501,11 +622,18 @@ pair_t q5(int n, airport_t airports[n])
             {
 
                 int k;
-                for (k = 0; (airports[i].airport_name[k] != '\0' && airports[j].airport_name[k] != '\0'); k++)
+                int flag;
+                for (k = 0, flag = 1; flag &&
+                                        ((airports[i].airport_name[k] != '\0') &&
+                                         (airports[j].airport_name[k] != '\0')); )
                 { // the loop && following if block will compare two strings
                     if (airports[i].airport_name[k] != airports[j].airport_name[k])
                     {
-                        break;
+                        flag = 0;
+                    }
+                    else
+                    {
+                        k += 1;
                     }
                 }
                 if (k > (len + 1))
@@ -559,52 +687,57 @@ int q8(int n, int trip_order[n - 1], const connection_t connections[n][n])
 {
     int visited[n];
 
-    trip all_trips[5040];//fact(7)
+    trip all_trips[5040]; // factorial(7)
     int size = 0;
 
-    // trip_order needs to be passed
-for (int i = 0; i < n; i++)//start point  loop
-{
-    for (int k = 0; k < n; k++)//excemption loop
+    if (n <= 2)
     {
-        for (int j = 0; j < n; j++)
-        {
-            visited[j] = 0;//initialzing visted array
-        }
-        if (k!=i)
-        {
-            visited[k]=-1;
-            traveling_sales_man_with_backtracking(n, connections, visited, i, i, 0, 0, all_trips, &size);
-        }
+        // We need a minimum of 3 airports, so that one can be the
+        // start airport, one can be the exempted airport, and the
+        // remaining one can be the visited airport.
 
-    }
-}
-
-    if (size>0)
-    {
-        int min_index = min(n, all_trips);
-        for (int i = 0; i < n-1; i++)
-        {
-        trip_order[i]=all_trips[min_index].sequence_of_visits[i];
-        }
-        int xyz=all_trips[min_index].cost;
-        return all_trips[min_index].cost;
-    }
-    else
-    {   //nont changing trip_order
         return -1;
     }
 
+    // trip_order needs to be passed
+    for (int i = 0; i < n; i++) // the start-point  loop
+    {
+        for (int k = 0; k < n; k++) // the exemption loop
+        {
+            for (int j = 0; j < n; j++) // initializing visited array
+            {
+                visited[j] = 0;
+            }
+            if ((k != i) && (connections[i][k].distance != INT_MAX))
+            {
+                visited[k] = -1; // mark k as exempted
+                get_all_trips(n, connections, visited, i, i, k, 0, 0, all_trips, &size);
+            }
+        } // the k loop
+    }     // the i loop
 
-
-    //return 0;
+    if (size > 0) // If at least one full-coverage cyclic trips found
+    {
+        int min_index = min(n, all_trips);
+        for (int i = 0; i < n - 1; i++)
+        {
+            trip_order[i] = all_trips[min_index].sequence_of_visits[i];
+        }
+        int min_cost = all_trips[min_index].cost;
+        return min_cost;
+    }
+    else
+    { // not changing trip_order
+        return -1;
+    }
 }
 
 int q9(int n, pair_t edges[n - 1], const connection_t connections[n][n])
-{   edge_list The_list_of_all_edges;
+{
+    edge_list The_list_of_all_edges;
     edge_list The_span_list;
-    The_list_of_all_edges.n=0;
-    The_span_list.n=0;
+    The_list_of_all_edges.n = 0;
+    The_span_list.n = 0;
     for (int i = 0; i < n; i++)
     {
         for (int j = 0; j < i; j++)
@@ -618,12 +751,13 @@ int q9(int n, pair_t edges[n - 1], const connection_t connections[n][n])
             }
         }
     }
-    Kruskals_Algorithim(n,edges,connections,&The_list_of_all_edges,&The_span_list);
-    int count=0;
-    for (int i = 0; i < n-1; i++)
-    {   count=count+The_span_list.data[i].w.time;
-        edges[i].first=The_span_list.data[i].u;
-        edges[i].second=The_span_list.data[i].v;
+    Kruskals_Algorithim(n, edges, connections, &The_list_of_all_edges, &The_span_list);
+    int count = 0;
+    for (int i = 0; i < n - 1; i++)
+    {
+        count = count + The_span_list.data[i].w.time;
+        edges[i].first = The_span_list.data[i].u;
+        edges[i].second = The_span_list.data[i].v;
     }
 
     return count;
@@ -633,7 +767,17 @@ void q10(int n, int k, const airport_t *src,
          const connection_t connections[n][n], const int destinations[k],
          int costs[k])
 {
+    int visited[n];
+    int source = src->num_id;
 
+    for (int i = 0;i < k;++i)
+    {
+        for(int i=0;i<n;i++)
+        {
+            visited[i]=0;
+        }
+        costs[i] = find_min_time(n,source,destinations[i],0,INT_MAX,connections,visited);
+    }
 }
 
 // END
